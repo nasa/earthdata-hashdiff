@@ -10,11 +10,61 @@ timestamps in history attributes).
 
 ### Generating hashed files
 
-...
+JSON files that contain SHA 256 hash values for all variables and groups in
+a netCDF4 or HDF-5 file can be generated using either the `create_h5_hash_file`
+or `create_nc4_hash_file`.
+
+```
+from earthdata_hashdiff import create_nc4_hash_file
+
+
+create_nc4_hash_file('path/to/netcdf/file.nc4', 'path/to/output/hash.json')
+```
+
+The functions to create the hash files have two additional optional arguments:
+
+* `skipped_metadata_attributes` - this is a set of strings. When specified, the
+  hashing functionality will not include metadata attributes with matching names
+  in the calculation of the hash for all variables or groups.
+* `xarray_kwargs` - this dictionary allows users to specify keyword arguments
+  to `xarray` when the input file is opened as a dictionary of group objects.
+  The default value for this kwarg is to turn off all `xarray` decoding for
+  CF Conventions, coordinates, times and time deltas.
 
 ### Comparisons against reference files
 
-...
+When a JSON file exists with hashed values, it can be used for comparisons. The
+public API provides `h5_matches_reference_hash_file` and
+`nc4_matches_reference_hash_file`, although these both are aliases for the same
+underlying functionality using `xarray`:
+
+```
+from earthdata_hashdiff import nc4_matches_reference_hash_file
+
+
+assert nc4_matches_reference_hash_file(
+    'path/to/netcdf/file.nc4',
+    'path/to/json/with/hashes.json',
+)
+```
+
+The comparison functions have three optional arguments:
+
+* `skipped_variables_or_groups` - the input for this kwarg is a set of string.
+  The strings are the full paths to variables and groups, which tell the
+  function to not check if the generated hash for those variables and groups
+  are identical to the values in the JSON reference hash file. Note, the
+  comparison function will still check that the input file contains the named
+  variables and/or groups, even though it doesn't check their hashed value.
+* `skipped_metadata_attributes` - this set of strings, when specified, omits
+  matching metadata attributes from the calculation of all variables and groups.
+  If metadata attributes were specified when generating the JSON file containing
+  hashes, the same metadata attributes will need to be specified during
+  comparison, to ensure the hashes match.
+* xarray_kwargs` - this dictionary allows users to specify keyword arguments
+  to `xarray` when the input file is opened as a dictionary of group objects.
+  The default value for this kwarg is to turn off all `xarray` decoding for
+  CF Conventions, coordinates, times and time deltas.
 
 ## Installing
 
