@@ -1,4 +1,4 @@
-# Contributing to HOSS
+# Contributing to earthdata-hashdiff
 
 Thanks for contributing!
 
@@ -33,12 +33,12 @@ This repository adheres to Python coding style recommendations from
 encouraged in all function signatures.
 
 When adding or updating functionality, please ensure unit tests are added to
-the existing `unittest` suite in the `tests` directory, which cover each branch
+the existing `pytest` suite in the `tests` directory, which cover each branch
 of the code.
 
 ## Disclaimer
 
-earthdata-hashdiff maintainers will review all pull requests submitted. Only
+`earthdata-hashdiff` maintainers will review all pull requests submitted. Only
 requests that meet the standard of quality set forth by existing code,
 following the patterns set forth by existing code, and adhering to existing
 design patterns will be considered and/or accepted.

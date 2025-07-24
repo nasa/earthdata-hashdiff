@@ -1,0 +1,90 @@
+[project]
+name = "earthdata-hashdiff"
+dynamic = ["dependencies", "version"]
+description = 'Python package that hashes content of Earth science data files and compares to reference files.'
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = []
+authors = [
+  { name = "Owen Littlejohns", email = "owen.m.littlejohns@nasa.gov" },
+  { name = "Matt Savoie", email = "savoie@colorado.edu" },
+]
+maintainers = [
+  { name = "Owen Littlejohns", email = "owen.m.littlejohns@nasa.gov" },
+  { name = "Matt Savoie", email = "savoie@colorado.edu" },
+]
+classifiers = [
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+license-files = ["LICENSE"]
+
+[project.urls]
+Documentation = "https://github.com/nasa/earthdata-hashdiff#readme"
+Issues = "https://github.com/nasa/earthdata-hashdiff/issues"
+Source = "https://github.com/nasa/earthdata-hashdiff"
+
+[build-system]
+requires = ["hatchling", "hatch-requirements-txt"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = [
+    "requirements.txt",
+]
+
+[tool.hatch.version]
+path = "earthdata_hashdiff/__about__.py"
+
+[tool.hatch.envs.types]
+extra-dependencies = [
+  "mypy>=1.0.0",
+]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:earthdata_hashdiff tests}"
+
+[tool.coverage.run]
+source_pkgs = ["earthdata_hashdiff", "tests"]
+branch = true
+parallel = true
+omit = [
+  "earthdata_hashdiff/__about__.py",
+]
+
+[tool.coverage.paths]
+earthdata_hashdiff = ["earthdata_hashdiff",]
+tests = ["tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+[tool.hatch.build.targets.sdist]
+packages=["earthdata_hashdiff"]
+
+[tool.hatch.build.targets.wheel]
+packages=["earthdata_hashdiff"]
+
+[tool.ruff]
+lint.select = [
+  "E",   # pycodestyle
+  "F",   # pyflakes
+  "UP",  # pyupgrade
+  "I",   # organize imports
+]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+exclude = ["tests/"]

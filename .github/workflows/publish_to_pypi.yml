@@ -1,0 +1,59 @@
+name: Publish earthdata-hashdiff to PyPI
+
+on:
+  push:
+    branches: [ main ]
+    paths: earthdata_hashdiff/__about__.py
+  workflow_dispatch:
+
+jobs:
+  run_tests:
+    uses: ./.github/workflows/run_tests.yml
+
+  publish_to_pypi:
+    needs: run_tests
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Checkout earthdata-hashdiff repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install hatch
+        run: |
+          python -m pip install --upgrade pip
+          pip install hatch
+
+      - name: Extract semantic version number
+        run: echo "semantic_version=$(hatch version)" >> $GITHUB_ENV
+
+      - name: Extract release version notes
+        run: |
+          version_release_notes=$(./bin/extract-release-notes.sh)
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo "${version_release_notes}" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Build earthdata-hashdiff distributions
+        run: hatch build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Publish GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          body: ${{ env.RELEASE_NOTES }}
+          commit: main
+          name: Version ${{ env.semantic_version }}
+          tag: ${{ env.semantic_version }}
