@@ -17,9 +17,9 @@ from earthdata_hashdiff import (
 )
 
 
-def test_create_h5_hash_file(temp_dir, sample_h5_file, sample_datatree_hashes):
+def test_create_h5_hash_file(tmpdir, sample_h5_file, sample_datatree_hashes):
     """Test HDF-5 alias for creating hash files using xarray."""
-    reference_file_path = path_join(temp_dir, 'sample_output.json')
+    reference_file_path = path_join(tmpdir, 'sample_output.json')
     create_h5_hash_file(sample_h5_file, reference_file_path, {})
 
     # Ensure output hash file exists and matches test fixtures:
@@ -29,9 +29,9 @@ def test_create_h5_hash_file(temp_dir, sample_h5_file, sample_datatree_hashes):
     assert reference_file_json == sample_datatree_hashes
 
 
-def test_create_nc4_hash_file(temp_dir, sample_nc4_file, sample_datatree_hashes):
+def test_create_nc4_hash_file(tmpdir, sample_nc4_file, sample_datatree_hashes):
     """Test netCDF4 alias for creating hash files using xarray."""
-    reference_file_path = path_join(temp_dir, 'sample_output.json')
+    reference_file_path = path_join(tmpdir, 'sample_output.json')
     create_nc4_hash_file(sample_nc4_file, reference_file_path, {})
 
     # Ensure output hash file exists and matches test fixtures:

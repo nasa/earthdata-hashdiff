@@ -1,7 +1,5 @@
 import json
 from os.path import join as path_join
-from shutil import rmtree
-from tempfile import mkdtemp
 
 import numpy as np
 import xarray as xr
@@ -30,14 +28,6 @@ def latitude_metadata():
 def latitude_metadata_bytes():
     """Bytes value of latitude metadata dictionary."""
     return b'{"standard_name": "latitude", "units": "degrees_north"}'
-
-
-@fixture(scope='function')
-def temp_dir():
-    """Temporary directory for hosting isolated test input and output."""
-    temporary_directory = mkdtemp()
-    yield temporary_directory
-    rmtree(temporary_directory)
 
 
 @fixture()
@@ -101,9 +91,9 @@ def sample_datatree_hashes(group_one_hashes, group_two_hashes):
 
 
 @fixture()
-def sample_hash_file(temp_dir, sample_datatree_hashes):
+def sample_hash_file(tmpdir, sample_datatree_hashes):
     """Output JSON file containing reference hashes."""
-    hash_file_path = path_join(temp_dir, 'hashed_reference_file.json')
+    hash_file_path = path_join(tmpdir, 'hashed_reference_file.json')
 
     with open(hash_file_path, 'w', encoding='utf-8') as file_handler:
         json.dump(sample_datatree_hashes, file_handler, indent=2)
@@ -188,20 +178,20 @@ def sample_datatree():
 
 
 @fixture(scope='function')
-def sample_h5_file(sample_datatree, temp_dir):
+def sample_h5_file(sample_datatree, tmpdir):
     """xarray.DataTree object written out to disk as HDF-5 for testing.
 
     Strictly speaking, the output is using `xarray.DataTree.to_netcdf`.
 
     """
-    sample_file_path = path_join(temp_dir, 'sample_file.h5')
+    sample_file_path = path_join(tmpdir, 'sample_file.h5')
     sample_datatree.to_netcdf(sample_file_path)
     return sample_file_path
 
 
 @fixture(scope='function')
-def sample_nc4_file(sample_datatree, temp_dir):
+def sample_nc4_file(sample_datatree, tmpdir):
     """xarray.DataTree object written out to disk as netCDF4 for testing."""
-    sample_file_path = path_join(temp_dir, 'sample_file.nc4')
+    sample_file_path = path_join(tmpdir, 'sample_file.nc4')
     sample_datatree.to_netcdf(sample_file_path)
     return sample_file_path

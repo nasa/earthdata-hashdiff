@@ -24,8 +24,8 @@ create_nc4_hash_file('path/to/netcdf/file.nc4', 'path/to/output/hash.json')
 The functions to create the hash files have two additional optional arguments:
 
 * `skipped_metadata_attributes` - this is a set of strings. When specified, the
-  hashing functionality will not include metadata attributes with matching names
-  in the calculation of the hash for all variables or groups.
+  hashing functionality will not include metadata attributes with that exact
+  name in the calculation of the hash for all variables or groups.
 * `xarray_kwargs` - this dictionary allows users to specify keyword arguments
   to `xarray` when the input file is opened as a dictionary of group objects.
   The default value for this kwarg is to turn off all `xarray` decoding for
@@ -58,10 +58,10 @@ The comparison functions have three optional arguments:
   variables and/or groups, even though it doesn't check their hashed value.
 * `skipped_metadata_attributes` - this set of strings, when specified, omits
   matching metadata attributes from the calculation of all variables and groups.
-  If metadata attributes were specified when generating the JSON file containing
-  hashes, the same metadata attributes will need to be specified during
-  comparison, to ensure the hashes match.
-* xarray_kwargs` - this dictionary allows users to specify keyword arguments
+  If metadata attributes were specified as skipped when generating the JSON file
+  containing hashes, the same metadata attributes will need to be specified
+  as skipped during comparison, to ensure the hashes match.
+* `xarray_kwargs` - this dictionary allows users to specify keyword arguments
   to `xarray` when the input file is opened as a dictionary of group objects.
   The default value for this kwarg is to turn off all `xarray` decoding for
   CF Conventions, coordinates, times and time deltas.
@@ -156,6 +156,7 @@ checks that enforce coding standard best practices. These include:
 * [ruff](https://github.com/astral-sh/ruff) Python linting checks.
 * [black](https://black.readthedocs.io/en/stable/index.html) Python code
   formatting checks.
+* [mypy](https://mypy-lang.org/) Type hint checking and enforcement.
 
 To enable these checks locally:
 

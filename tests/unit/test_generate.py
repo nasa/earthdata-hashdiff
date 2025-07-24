@@ -26,16 +26,14 @@ from earthdata_hashdiff.generate import (
 from tests.conftest import is_json_serialisable
 
 
-def test_create_xarray_reference_file(
-    temp_dir, sample_nc4_file, sample_datatree_hashes
-):
+def test_create_xarray_reference_file(tmpdir, sample_nc4_file, sample_datatree_hashes):
     """Check a reference file of hashes is created as expected.
 
     This implicitly tests the write_reference_file helper function, that only
     dumps a dictionary out to a JSON file.
 
     """
-    reference_file_path = path_join(temp_dir, 'sample_output.json')
+    reference_file_path = path_join(tmpdir, 'sample_output.json')
     create_xarray_reference_file(sample_nc4_file, reference_file_path, {})
 
     # Ensure output hash file exists and matches test fixtures:
@@ -45,9 +43,9 @@ def test_create_xarray_reference_file(
     assert reference_file_json == sample_datatree_hashes
 
 
-def test_create_h5_hash_file(temp_dir, sample_h5_file, sample_datatree_hashes):
+def test_create_h5_hash_file(tmpdir, sample_h5_file, sample_datatree_hashes):
     """Test HDF-5 alias for creating hash files using xarray."""
-    reference_file_path = path_join(temp_dir, 'sample_output.json')
+    reference_file_path = path_join(tmpdir, 'sample_output.json')
     create_h5_hash_file(sample_h5_file, reference_file_path, {})
 
     # Ensure output hash file exists and matches test fixtures:
@@ -57,9 +55,9 @@ def test_create_h5_hash_file(temp_dir, sample_h5_file, sample_datatree_hashes):
     assert reference_file_json == sample_datatree_hashes
 
 
-def test_create_nc4_hash_file(temp_dir, sample_nc4_file, sample_datatree_hashes):
+def test_create_nc4_hash_file(tmpdir, sample_nc4_file, sample_datatree_hashes):
     """Test netCDF4 alias for creating hash files using xarray."""
-    reference_file_path = path_join(temp_dir, 'sample_output.json')
+    reference_file_path = path_join(tmpdir, 'sample_output.json')
     create_nc4_hash_file(sample_nc4_file, reference_file_path, {})
 
     # Ensure output hash file exists and matches test fixtures:
@@ -104,15 +102,22 @@ def test_get_xarray_object_hash_group(sample_datatree, sample_datatree_hashes):
     )
 
 
-def test_get_xarray_object_hash_skipped_attributes(sample_datatree):
+def test_get_xarray_object_hash_skipped_attributes(
+    sample_datatree, sample_datatree_hashes
+):
     """Show that skipped_metadata_attributes are ignored in the hash derivation.
 
     This test is coupled with `test_get_xarray_object_hash_group` as it is
-    important to note that the two hashes are different.
+    important to note that the two hashes are different, which is shown with
+    the first assertion in this test.
 
     """
+    actual_hash = get_xarray_object_hash(
+        sample_datatree['/group_one'].ds, {'group_attributes'}
+    )
+    assert actual_hash != sample_datatree_hashes['/group_one']
     assert (
-        get_xarray_object_hash(sample_datatree['/group_one'].ds, {'group_attributes'})
+        actual_hash
         == 'e464bed8253d2029ff985060ff27963809ed960b8642c3de26ae369a4037f4ed'
     )
 
@@ -191,7 +196,7 @@ def test_get_variable_dimensions_bytes(variable_path, expected_bytes, sample_dat
 
     - Different ordering of the same dimensions is important.
     - The same dimensions in different variables (different groups) gives the
-    - same result.
+      same result.
 
     """
     assert (
