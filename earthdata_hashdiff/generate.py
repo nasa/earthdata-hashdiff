@@ -113,7 +113,7 @@ def get_hashes_from_xarray_input(
 def write_reference_file(reference_file_path: str, hash_output: dict[str, str]):
     """Write JSON containing SHA256 hashes to an output file."""
     with open(reference_file_path, 'w', encoding='utf-8') as file_handler:
-        json.dump(hash_output, file_handler, indent=2)
+        json.dump(hash_output, file_handler, indent=2, sort_keys=True)
 
 
 def get_hash_of_xarray_dataset(
