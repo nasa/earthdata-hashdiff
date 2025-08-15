@@ -52,3 +52,7 @@ dmypy.json
 
 # hatch
 dist/*
+
+# Documentation ancillary files
+docs/*json
+docs/*HDF5

@@ -1,5 +1,7 @@
 # earthdata-hashdiff
 
+[![Available on pypi](https://img.shields.io/pypi/v/earthdata-hashdiff.svg)](https://pypi.python.org/pypi/earthdata-hashdiff/)
+
 This repository contains functionality to read Earth science data file formats
 and hash the contents of those files into a JSON object. This enables the easy
 storage of a smaller artefact for tasks such as regression tests, while omitting

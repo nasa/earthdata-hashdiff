@@ -1,0 +1,4 @@
+# These packages are required to run the documentation Jupyter notebook.
+earthdata-hashdiff ~= 1.0.1
+notebook ~= 7.4.5
+requests ~= 2.32.4
