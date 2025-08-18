@@ -1,3 +1,3 @@
 """Version for the package - only edit when intending to release."""
 
-version = '1.0.1'
+version = '1.0.2'

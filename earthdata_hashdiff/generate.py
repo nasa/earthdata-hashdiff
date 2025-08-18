@@ -157,7 +157,7 @@ def get_xarray_object_hash(
     if isinstance(xarray_object, xr.Variable | xr.DataArray):
         dimensions_bytes = get_variable_dimensions_bytes(xarray_object.dims)
     else:
-        dimensions_bytes = get_group_dimensions_bytes(xarray_object.dims)
+        dimensions_bytes = get_group_dimensions_bytes(xarray_object.sizes)
 
     if isinstance(xarray_object, xr.Dataset):
         variable_array_bytes = None
