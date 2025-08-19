@@ -27,6 +27,7 @@ from pathlib import Path
 
 import numpy as np
 import xarray as xr
+from tifffile import TiffFile
 from xarray.core.utils import Frozen
 
 # All decoding is switched off by default to ensure future changes to xarray do
@@ -38,6 +39,31 @@ XARRAY_DECODE_DEFAULTS = {
     'decode_times': False,
 }
 
+# Define a standard key to use for GeoTIFF file hash in JSON output
+GEOTIFF_HASH_KEY = 'geotiff_hash'
+
+
+def create_geotiff_hash_file(
+    input_file_path: str,
+    reference_file_path: str,
+    skipped_metadata_tags: set[str] = set(),
+):
+    """Calculate and output SHA256 hashes for a GeoTIFF file.
+
+    Args:
+        input_file_path: Input netCDF4 or HDF5 to parse and generate a hash
+            from its data and metadata.
+        reference_file_path: Output path for JSON file containing the GeoTIFF
+            hash value.
+        skipped_metadata_tags: Names of metadata tags to omit from the
+            derivation of the SHA256 has for the input GeoTIFF file.
+            These will be values that are known to vary. The main use-case is
+            metadata tags with timestamps dependent on request execution time.
+
+    """
+    generated_hash = get_hash_from_geotiff_file(input_file_path, skipped_metadata_tags)
+    write_reference_file(reference_file_path, generated_hash)
+
 
 def create_xarray_reference_file(
     input_file_path: str,
@@ -45,7 +71,7 @@ def create_xarray_reference_file(
     skipped_metadata_attributes: set[str] = set(),
     xarray_kwargs: dict = XARRAY_DECODE_DEFAULTS,
 ):
-    """Calculate and output SHA256 hashs for an xarray compatible file.
+    """Calculate and output SHA256 hashes for an xarray compatible file.
 
     Args:
         input_file_path: Input netCDF4 or HDF5 to parse and generate hashes
@@ -108,6 +134,11 @@ def get_hashes_from_xarray_input(
         )
 
     return parsed_hashes
+
+
+# Aliases for get_hashes_from_xarray_input (for public API):
+get_hashes_from_h5_file = get_hashes_from_xarray_input
+get_hashes_from_nc4_file = get_hashes_from_xarray_input
 
 
 def write_reference_file(reference_file_path: str, hash_output: dict[str, str]):
@@ -281,3 +312,27 @@ def serialise_metadata_value(metadata_value):
         cleaned_value = metadata_value
 
     return cleaned_value
+
+
+def get_hash_from_geotiff_file(
+    input_file_path: str,
+    skipped_metadata_tags: set[str],
+) -> dict[str, str]:
+    """Using tifffile, generate hash for a GeoTIFF from the array and metadata.
+
+    Args:
+        input_file_path: Input GeoTIFF to parse and generate hashes for the
+            array and metadata.
+        skipped_metadata_tags: Tag names (not IDs) of tags to be omitted from
+            the bytes retrieved from the GeoTIFF metadata tags.
+
+    """
+    with TiffFile(input_file_path) as geotiff_image:
+        array_bytes = get_numpy_array_bytes(geotiff_image.asarray())
+
+        metadata_bytes = get_metadata_bytes(
+            geotiff_image.geotiff_metadata or {},
+            skipped_metadata_tags,
+        )
+
+    return {GEOTIFF_HASH_KEY: get_hash_value(metadata_bytes, b'', array_bytes)}

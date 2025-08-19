@@ -8,11 +8,13 @@ import numpy as np
 import pytest
 
 from earthdata_hashdiff.generate import (
+    create_geotiff_hash_file,
     create_h5_hash_file,
     create_nc4_hash_file,
     create_xarray_reference_file,
     get_full_variable_path,
     get_group_dimensions_bytes,
+    get_hash_from_geotiff_file,
     get_hash_of_xarray_dataset,
     get_hash_value,
     get_hashes_from_xarray_input,
@@ -306,3 +308,25 @@ def test_serialise_metadata_value(metadata_value, cleaned_value):
     serialised_value = serialise_metadata_value(metadata_value)
     assert serialised_value == cleaned_value
     assert is_json_serialisable({'metadata_key': serialised_value})
+
+
+def test_create_geotiff_hash_file(sample_geotiff_file, tmpdir, sample_geotiff_hash):
+    """Check a reference file containing a hash is created as expected.
+
+    This implicitly tests the write_reference_file helper function, that only
+    dumps a dictionary out to a JSON file.
+
+    """
+    reference_file_path = path_join(tmpdir, 'sample_output.json')
+    create_geotiff_hash_file(sample_geotiff_file, reference_file_path, {})
+
+    # Ensure output hash file exists and matches test fixtures:
+    with open(reference_file_path, encoding='utf-8') as file_handler:
+        reference_file_json = json.load(file_handler)
+
+    assert reference_file_json == sample_geotiff_hash
+
+
+def test_get_hash_from_geotiff_file(sample_geotiff_file, sample_geotiff_hash):
+    """Get hash output for a GeoTIFF input file."""
+    assert get_hash_from_geotiff_file(sample_geotiff_file, {}) == sample_geotiff_hash

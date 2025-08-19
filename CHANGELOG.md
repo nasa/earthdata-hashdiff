@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.1.0] - 2025-08-19
+
+### Added
+
+- The ability to parse and generate hashes for a GeoTIFF file using
+  `create_geotiff_hash_file`.
+- The ability to compare a GeoTIFF file to a reference hash file via
+  `geotiff_matches_reference_hash_file`.
+- Exposing the ability to retrieve JSON objects, rather than only produce JSON
+  output files via `get_hash_from_geotiff_file`, `get_hashes_from_h5_file` and
+  `get_hashes_from_nc4_file`.
+
 ## [v1.0.2] - 2025-08-18
 
 ### Changed

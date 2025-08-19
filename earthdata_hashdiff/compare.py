@@ -8,13 +8,15 @@ This module focuses on comparing output specifically with xarray.
 import json
 
 from earthdata_hashdiff.generate import (
+    GEOTIFF_HASH_KEY,
     XARRAY_DECODE_DEFAULTS,
+    get_hash_from_geotiff_file,
     get_hashes_from_xarray_input,
 )
 
 
 def matches_reference_hash_file_using_xarray(
-    request_output_path: str,
+    binary_file_path: str,
     reference_file_path: str,
     skipped_variables_or_groups: set[str] = set(),
     skipped_metadata_attributes: set[str] = set(),
@@ -23,9 +25,10 @@ def matches_reference_hash_file_using_xarray(
     """Generate hashes for request output and compare to reference file.
 
     Args:
-        request_output_path: netCDF4 or HDF5 file retrieved from a Harmony request.
+        binary_file_path: netCDF4 or HDF5 file, e.g., retrieved from a Harmony
+            request.
         reference_file_path: File containing generated SHA256 values for every
-            group and variable in the original test output.
+            group and variable in a previously hashed file.
         skipped_variables_or_groups: Variables or groups that are known to vary
             between different test executions. For example, `/subset_files` in the
             output from SAMBAH, which varies between production and UAT.
@@ -40,7 +43,7 @@ def matches_reference_hash_file_using_xarray(
 
     """
     actual_hashes = get_hashes_from_xarray_input(
-        request_output_path,
+        binary_file_path,
         skipped_metadata_attributes=skipped_metadata_attributes,
         xarray_kwargs=xarray_kwargs,
     )
@@ -63,3 +66,31 @@ def matches_reference_hash_file_using_xarray(
 # Aliases for matches_reference_hash_file_using_xarray (for public API).
 nc4_matches_reference_hash_file = matches_reference_hash_file_using_xarray
 h5_matches_reference_hash_file = matches_reference_hash_file_using_xarray
+
+
+def geotiff_matches_reference_hash_file(
+    geotiff_file_path: str,
+    reference_file_path: str,
+    skipped_metadata_tags: set[str] = set(),
+) -> bool:
+    """Generate hash for GeoTIFF file and compare to reference file.
+
+    Args:
+        geotiff_file_path: GeoTIFF file to compared against reference file.
+        reference_file_path: File containing generated SHA256 value in a
+            previously hashed file.
+        skipped_metadata_tags: Names of GeoTIFF metadata tags to omit from the
+            derivation of the SHA256 hash for the input GeoTIFF file. These
+            will be values that are known to vary. The main use-case is
+            metadata tags with timestamps dependent on request execution time.
+
+    """
+    actual_hash = get_hash_from_geotiff_file(
+        geotiff_file_path,
+        skipped_metadata_tags,
+    )
+
+    with open(reference_file_path, encoding='utf-8') as file_handler:
+        reference_hash = json.load(file_handler)
+
+    return actual_hash[GEOTIFF_HASH_KEY] == reference_hash[GEOTIFF_HASH_KEY]

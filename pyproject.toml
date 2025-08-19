@@ -3,7 +3,7 @@ name = "earthdata-hashdiff"
 dynamic = ["dependencies", "version"]
 description = 'Python package that hashes content of Earth science data files and compares to reference files.'
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 keywords = []
 authors = [
   { name = "Owen Littlejohns", email = "owen.m.littlejohns@nasa.gov" },
@@ -17,7 +17,6 @@ classifiers = [
   "License :: OSI Approved :: Apache Software License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
 ]

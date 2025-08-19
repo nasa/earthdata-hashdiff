@@ -4,6 +4,7 @@ from os.path import join as path_join
 import numpy as np
 import xarray as xr
 from pytest import fixture
+from tifffile import imwrite
 
 
 def is_json_serialisable(input_object) -> bool:
@@ -195,3 +196,119 @@ def sample_nc4_file(sample_datatree, tmpdir):
     sample_file_path = path_join(tmpdir, 'sample_file.nc4')
     sample_datatree.to_netcdf(sample_file_path)
     return sample_file_path
+
+
+@fixture(scope='function')
+def sample_geotiff_tags():
+    """Tags for the sample GeoTIFF file."""
+    return [
+        (
+            34735,
+            3,
+            32,
+            (
+                1,
+                1,
+                0,
+                7,
+                1024,
+                0,
+                1,
+                1,
+                1025,
+                0,
+                1,
+                1,
+                1026,
+                34737,
+                36,
+                0,
+                2049,
+                34737,
+                7,
+                36,
+                2054,
+                0,
+                1,
+                9102,
+                3072,
+                0,
+                1,
+                6933,
+                3076,
+                0,
+                1,
+                9001,
+            ),
+            True,
+        ),
+        (33550, 12, 3, (36032.22084058401, 36032.220840584, 0.0), True),
+        (33922, 12, 6, (0.0, 0.0, 0.0, -17367530.4451615, 7314540.8306386, 0.0), True),
+        (34737, 2, 44, 'WGS 84 / NSIDC EASE-Grid 2.0 Global|WGS 84|', True),
+        (
+            42112,
+            2,
+            845,
+            (
+                '<GDALMetadata>\n'
+                '  <Item name="long_name">The fraction of the grid cell that '
+                '  contains the most common land cover in that area based on '
+                '  the IGBP landcover map.</Item>\n'
+                '  <Item name="OVR_RESAMPLING_ALG">NEAREST</Item>'
+                '  <Item name="valid_max">1.0</Item>'
+                '  <Item name="valid_min">0.0</Item>'
+                '  <Item name="DESCRIPTION" sample="0" role="description">'
+                '  The fraction of the grid cell that contains the most '
+                '  common land cover in that area based on the IGBP '
+                '  landcover map.</Item>'
+                '  <Item name="DESCRIPTION" sample="1" role="description">'
+                '  The fraction of the grid cell that contains the most '
+                '  common land cover in that area based on the IGBP '
+                '  landcover map.</Item>'
+                '  <Item name="DESCRIPTION" sample="2" role="description">'
+                '  The fraction of the grid cell that contains the most '
+                '  common land cover in that area based on the IGBP '
+                '  landcover map.</Item>'
+                '</GDALMetadata>'
+            ),
+            True,
+        ),
+        (42113, 2, 6, '-9999', True),
+    ]
+
+
+@fixture(scope='function')
+def sample_geotiff_file(tmpdir, sample_geotiff_tags):
+    """GeoTIFF object written out to disk.
+
+    Values copied from a PREFIRE GeoTIFF.
+
+    """
+    geotiff_path = path_join(tmpdir, 'sample_file.tif')
+    imwrite(
+        geotiff_path,
+        np.array([[1, 2], [3, 4]]),
+        extratags=sample_geotiff_tags,
+    )
+    return geotiff_path
+
+
+@fixture()
+def sample_geotiff_hash():
+    """Hashed value for sample GeoTIFF file."""
+    return {
+        'geotiff_hash': (
+            '450c6cdad0419431dc9d2dc80ad374f8627632302ae5fd0b7354aae160ff528e'
+        )
+    }
+
+
+@fixture()
+def sample_geotiff_hash_file(sample_geotiff_hash, tmpdir):
+    """Output JSON file containing reference hash for GeoTIFF sample file."""
+    hash_file_path = path_join(tmpdir, 'hashed_reference_file.json')
+
+    with open(hash_file_path, 'w', encoding='utf-8') as file_handler:
+        json.dump(sample_geotiff_hash, file_handler, indent=2)
+
+    return hash_file_path
