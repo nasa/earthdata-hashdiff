@@ -27,9 +27,9 @@ from pathlib import Path
 
 import numpy as np
 import xarray as xr
-from PIL import Image
-from PIL.ExifTags import TAGS
-from PIL.Image import Image as PILImageType
+from typing import  Any
+from collections.abc import Iterator
+from tifffile import TiffFile, TiffPage
 from xarray.core.utils import Frozen
 
 # All decoding is switched off by default to ensure future changes to xarray do
@@ -320,7 +320,7 @@ def get_hash_from_geotiff_file(
     input_file_path: str,
     skipped_metadata_tags: set[str],
 ) -> dict[str, str]:
-    """Using pillow, generate hash for a GeoTIFF from the array and metadata.
+    """Using tifffile, generate hash for a GeoTIFF from the array and metadata.
 
     Args:
         input_file_path: Input GeoTIFF to parse and generate hashes for the
@@ -329,23 +329,35 @@ def get_hash_from_geotiff_file(
             the bytes retrieved from the GeoTIFF metadata tags.
 
     """
-    geotiff_image = Image.open(input_file_path)
+    geotiff_image = TiffFile(input_file_path)
 
-    array_bytes = get_numpy_array_bytes(np.array(geotiff_image))
+    array_bytes = get_numpy_array_bytes(geotiff_image.asarray())
     metadata_bytes = get_geotiff_metadata_bytes(geotiff_image, skipped_metadata_tags)
 
     return {GEOTIFF_HASH_KEY: get_hash_value(metadata_bytes, b'', array_bytes)}
 
 
 def get_geotiff_metadata_bytes(
-    geotiff_image: PILImageType,
+    geotiff_image: TiffFile,
     skipped_metadata_tags: set[str],
 ) -> bytes:
     """Return bytes for all metadata attributes in the GeoTIFF."""
     raw_metadata = {
-        str(TAGS.get(tag_id, tag_id)): tag_value
-        for tag_id, tag_value in geotiff_image.getexif().items()
-        if str(TAGS.get(tag_id, tag_id)) not in skipped_metadata_tags
+        tag_name: tag_value
+        for tag_name, tag_value in tiff_metadata(geotiff_image)
+        if tag_name not in skipped_metadata_tags
     }
-
     return get_metadata_bytes(raw_metadata, set())
+
+
+def tiff_metadata(geotiff_image: TiffFile) -> Iterator[tuple[str, Any]]:
+    """Return all metadata tags from a GeoTIFF image."""
+    for page in geotiff_image.pages:
+        # Yield standard TIFF tags from the page's tags dictionary
+        if isinstance(page, TiffPage):
+            for tag in page.tags.values():
+                yield (tag.name, tag.value)
+
+                # If it's a GeoTIFF, also yield the geospatial tags
+                if page.is_geotiff and page.geotiff_tags:
+                    yield from page.geotiff_tags.items()
