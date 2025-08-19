@@ -27,9 +27,7 @@ from pathlib import Path
 
 import numpy as np
 import xarray as xr
-from PIL import Image
-from PIL.ExifTags import TAGS
-from PIL.Image import Image as PILImageType
+from tifffile import TiffFile
 from xarray.core.utils import Frozen
 
 # All decoding is switched off by default to ensure future changes to xarray do
@@ -329,23 +327,11 @@ def get_hash_from_geotiff_file(
             the bytes retrieved from the GeoTIFF metadata tags.
 
     """
-    geotiff_image = Image.open(input_file_path)
-
-    array_bytes = get_numpy_array_bytes(np.array(geotiff_image))
-    metadata_bytes = get_geotiff_metadata_bytes(geotiff_image, skipped_metadata_tags)
+    with TiffFile(input_file_path) as geotiff_image:
+        array_bytes = get_numpy_array_bytes(geotiff_image.asarray())
+        metadata_bytes = get_metadata_bytes(
+            geotiff_image.geotiff_metadata,
+            skipped_metadata_tags,
+        )
 
     return {GEOTIFF_HASH_KEY: get_hash_value(metadata_bytes, b'', array_bytes)}
-
-
-def get_geotiff_metadata_bytes(
-    geotiff_image: PILImageType,
-    skipped_metadata_tags: set[str],
-) -> bytes:
-    """Return bytes for all metadata attributes in the GeoTIFF."""
-    raw_metadata = {
-        str(TAGS.get(tag_id, tag_id)): tag_value
-        for tag_id, tag_value in geotiff_image.getexif().items()
-        if str(TAGS.get(tag_id, tag_id)) not in skipped_metadata_tags
-    }
-
-    return get_metadata_bytes(raw_metadata, set())
