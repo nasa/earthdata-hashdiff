@@ -77,7 +77,7 @@ def geotiff_matches_reference_hash_file(
 
     Args:
         geotiff_file_path: GeoTIFF file to compared against reference file.
-        reference_file_path: File containing generated SHA256 value  in a
+        reference_file_path: File containing generated SHA256 value in a
             previously hashed file.
         skipped_metadata_tags: Names of GeoTIFF metadata tags to omit from the
             derivation of the SHA256 hash for the input GeoTIFF file. These
