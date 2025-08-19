@@ -51,10 +51,10 @@ def create_geotiff_hash_file(
     """Calculate and output SHA256 hashes for a GeoTIFF file.
 
     Args:
-        input_file_path: Input netCDF4 or HDF5 to parse and generate hashes
-            for each variable and group.
-        reference_file_path: Output path for JSON file containing mapping of
-            variables and groups to a SHA256 hash.
+        input_file_path: Input netCDF4 or HDF5 to parse and generate a hash
+            from its data and metadata.
+        reference_file_path: Output path for JSON file containing the GeoTIFF
+            hash value.
         skipped_metadata_tags: Names of metadata tags to omit from the
             derivation of the SHA256 has for the input GeoTIFF file.
             These will be values that are known to vary. The main use-case is
@@ -318,7 +318,7 @@ def get_hash_from_geotiff_file(
     input_file_path: str,
     skipped_metadata_tags: set[str],
 ) -> dict[str, str]:
-    """Using pillow, generate hash for a GeoTIFF from the array and metadata.
+    """Using tifffile, generate hash for a GeoTIFF from the array and metadata.
 
     Args:
         input_file_path: Input GeoTIFF to parse and generate hashes for the

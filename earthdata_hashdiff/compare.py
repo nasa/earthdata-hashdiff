@@ -28,7 +28,7 @@ def matches_reference_hash_file_using_xarray(
         binary_file_path: netCDF4 or HDF5 file, e.g., retrieved from a Harmony
             request.
         reference_file_path: File containing generated SHA256 values for every
-            group and variable in the original test output.
+            group and variable in a previously hashed file.
         skipped_variables_or_groups: Variables or groups that are known to vary
             between different test executions. For example, `/subset_files` in the
             output from SAMBAH, which varies between production and UAT.
@@ -77,8 +77,8 @@ def geotiff_matches_reference_hash_file(
 
     Args:
         geotiff_file_path: GeoTIFF file to compared against reference file.
-        reference_file_path: File containing generated SHA256 values for every
-            group and variable in the original test output.
+        reference_file_path: File containing generated SHA256 value  in a
+            previously hashed file.
         skipped_metadata_tags: Names of GeoTIFF metadata tags to omit from the
             derivation of the SHA256 hash for the input GeoTIFF file. These
             will be values that are known to vary. The main use-case is
