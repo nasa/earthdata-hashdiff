@@ -2,7 +2,11 @@
 
 from os.path import join as path_join
 
+import numpy as np
+from tifffile import imwrite
+
 from earthdata_hashdiff.compare import (
+    geotiff_matches_reference_hash_file,
     h5_matches_reference_hash_file,
     matches_reference_hash_file_using_xarray,
     nc4_matches_reference_hash_file,
@@ -73,7 +77,7 @@ def test_matches_reference_hash_file_skip_metadata(
 def test_matches_reference_hash_file_updated_metadata_asserts_false(
     sample_datatree, tmpdir, sample_hash_file
 ):
-    """Ensure that when a metadata attribute is changes, comparison is False.
+    """Ensure that when a metadata attribute is changed, comparison is False.
 
     This test shows that an amended, but non-skipped, metadata attribute on a
     group will be detected as different by the comparison functions, because
@@ -98,3 +102,49 @@ def test_nc4_matches_reference_hash_file(sample_nc4_file, sample_hash_file):
 def test_h5_matches_reference_hash_file(sample_h5_file, sample_hash_file):
     """Ensure HDF-5 specific alias for the public API works as expected."""
     assert h5_matches_reference_hash_file(sample_h5_file, sample_hash_file)
+
+
+def test_geotiff_matches_reference_hash_file(
+    sample_geotiff_file, sample_geotiff_hash_file
+):
+    """Ensure GeoTIFF generates hashes matching the expected reference value."""
+    assert geotiff_matches_reference_hash_file(
+        sample_geotiff_file, sample_geotiff_hash_file
+    )
+
+
+def test_geotiff_matches_reference_hash_file_data_difference_fails(
+    sample_geotiff_tags, tmpdir, sample_geotiff_hash_file
+):
+    """Ensure GeoTIFF comparison fails when an array element is different."""
+    amended_geotiff_path = path_join(tmpdir, 'amended_metadata.tif')
+
+    imwrite(
+        amended_geotiff_path,
+        np.array([[1, 2], [3, 5]]),
+        extratags=sample_geotiff_tags,
+    )
+
+    assert not geotiff_matches_reference_hash_file(
+        amended_geotiff_path,
+        sample_geotiff_hash_file,
+    )
+
+
+def test_geotiff_matches_reference_hash_file_metadata_difference_fails(
+    sample_geotiff_tags, tmpdir, sample_geotiff_hash_file
+):
+    """Ensure GeoTIFF comparison fails when a metadata attribute is different."""
+    amended_geotiff_path = path_join(tmpdir, 'amended_metadata.tif')
+    sample_geotiff_tags[1] = (33550, 12, 3, (18000, 18000, 0.0), True)
+
+    imwrite(
+        amended_geotiff_path,
+        np.array([[1, 2], [3, 4]]),
+        extratags=sample_geotiff_tags,
+    )
+
+    assert not geotiff_matches_reference_hash_file(
+        amended_geotiff_path,
+        sample_geotiff_hash_file,
+    )

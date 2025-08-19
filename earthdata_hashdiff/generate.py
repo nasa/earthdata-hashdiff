@@ -329,8 +329,9 @@ def get_hash_from_geotiff_file(
     """
     with TiffFile(input_file_path) as geotiff_image:
         array_bytes = get_numpy_array_bytes(geotiff_image.asarray())
+
         metadata_bytes = get_metadata_bytes(
-            geotiff_image.geotiff_metadata,
+            geotiff_image.geotiff_metadata or {},
             skipped_metadata_tags,
         )
 
