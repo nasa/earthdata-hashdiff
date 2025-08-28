@@ -16,7 +16,7 @@ JSON files that contain SHA 256 hash values for all variables and groups in
 a netCDF4 or HDF-5 file can be generated using either the `create_h5_hash_file`
 or `create_nc4_hash_file`.
 
-```
+```python
 from earthdata_hashdiff import create_nc4_hash_file
 
 
@@ -33,6 +33,19 @@ The functions to create the hash files have two additional optional arguments:
   The default value for this kwarg is to turn off all `xarray` decoding for
   CF Conventions, coordinates, times and time deltas.
 
+A similar JSON file can be created for a GeoTIFF file:
+
+```python
+from earthdata_hashdiff import create_geotiff_hash_file
+
+create_geotiff_hash_file('path/to/geotiff/file.tif', 'path/to/output/hash.json')
+```
+
+This function has one additional optional argument:
+
+* `skipped_metadata_tags` - this is a set of strings. When specified, the
+  hashing functionality will not include GeoTIFF metadata tags with that name.
+
 ### Comparisons against reference files
 
 When a JSON file exists with hashed values, it can be used for comparisons. The
@@ -40,7 +53,7 @@ public API provides `h5_matches_reference_hash_file` and
 `nc4_matches_reference_hash_file`, although these both are aliases for the same
 underlying functionality using `xarray`:
 
-```
+```python
 from earthdata_hashdiff import nc4_matches_reference_hash_file
 
 
@@ -67,6 +80,18 @@ The comparison functions have three optional arguments:
   to `xarray` when the input file is opened as a dictionary of group objects.
   The default value for this kwarg is to turn off all `xarray` decoding for
   CF Conventions, coordinates, times and time deltas.
+
+The same operation can also be performed for a GeoTIFF file in comparison to an
+appropriate JSON reference file:
+
+```python
+from earthdata_hashdiff import geotiff_matches_reference_hash_file
+
+assert geotiff_matches_reference_hash_file(
+    'path/to/geotiff/file.tif',
+    'path/to/json/with/hash.json',
+)
+```
 
 ## Installing
 
@@ -102,7 +127,7 @@ also contains an update to the `earthdata_hashdiff.__about__.py` file.
 
 Prerequisites:
 
-  - Python 3.10+, ideally installed in a virtual environment, such as `pyenv`
+  - Python 3.11+, ideally installed in a virtual environment, such as `pyenv`
     or `conda`.
   - A local copy of this repository.
 
