@@ -56,3 +56,4 @@ dist/*
 # Documentation ancillary files
 docs/*json
 docs/*HDF5
+docs/*tif
