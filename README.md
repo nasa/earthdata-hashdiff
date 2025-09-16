@@ -10,6 +10,10 @@ timestamps in history attributes).
 
 ## Features
 
+While the following section describes the overall features of
+`earthdata-hashdiff`, further detailed examples can be found in
+`docs/Using_earthdata-hashdiff.ipynb`.
+
 ### Generating hashed files
 
 JSON files that contain SHA 256 hash values for all variables and groups in
@@ -32,6 +36,28 @@ The functions to create the hash files have two additional optional arguments:
   to `xarray` when the input file is opened as a dictionary of group objects.
   The default value for this kwarg is to turn off all `xarray` decoding for
   CF Conventions, coordinates, times and time deltas.
+
+### Skipping metadata attributes
+
+Some metadata attributes of netCDF4 or HDF-5 files may vary based on when those
+files are generated. `earthdata-hashdiff` already omits the `history` and
+`history_json` metadata attributes of all groups and variables when constructing
+a hash. It is possible to specify further attributes to be omitted from the
+hash generation:
+
+```python
+create_nc4_hash_file(
+    'path/to/netcdf/file.nc4',
+    'path/to/output/hash.json',
+    skipped_metadata_attributes={'attribute_name_one', 'attribute_name_two'},
+)
+```
+
+In the example above, neither of the values for metadata attributes with names
+`attribute_name_one` or `attribute_name_two` will be included in the calculation
+of a hash value for any variable or group in the input file.
+
+### Hashing GeoTIFF files
 
 A similar JSON file can be created for a GeoTIFF file:
 
@@ -80,6 +106,22 @@ The comparison functions have three optional arguments:
   to `xarray` when the input file is opened as a dictionary of group objects.
   The default value for this kwarg is to turn off all `xarray` decoding for
   CF Conventions, coordinates, times and time deltas.
+
+### Omitting metadata attributes
+
+If metadata attributes were omitted from hash calculations with
+`create_nc4_hash_file` or `create_h5_hash_file`, those same metadata attributes
+will need to be omitted from the comparison assertion.
+
+```python
+assert nc4_matches_reference_hash_file(
+    'path/to/netcdf/file.nc4',
+    'path/to/json/with/hashes.json',
+    skipped_metadata_attributes={'attribute_name_one', 'attribute_name_two'},
+)
+```
+
+### Comparisons with GeoTIFFs
 
 The same operation can also be performed for a GeoTIFF file in comparison to an
 appropriate JSON reference file:
