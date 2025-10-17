@@ -1,13 +1,17 @@
 """Unit tests for the earthdata_hashdiff.compare.py module."""
 
 from os.path import join as path_join
+from unittest.mock import patch
 
 import numpy as np
+import pytest
 from tifffile import imwrite
 
 from earthdata_hashdiff.compare import (
     geotiff_matches_reference_hash_file,
+    guess_file_type,
     h5_matches_reference_hash_file,
+    matches_reference_hash_file,
     matches_reference_hash_file_using_xarray,
     nc4_matches_reference_hash_file,
 )
@@ -148,3 +152,177 @@ def test_geotiff_matches_reference_hash_file_metadata_difference_fails(
         amended_geotiff_path,
         sample_geotiff_hash_file,
     )
+
+
+@pytest.mark.parametrize(
+    'file_path,expected_file_type',
+    [
+        ('input.tif', 'GeoTIFF'),
+        ('input.tiff', 'GeoTIFF'),
+        ('input.h5', 'HDF-5'),
+        ('input.hdf', 'HDF-5'),
+        ('input.HDF', 'HDF-5'),
+        ('input.hdf5', 'HDF-5'),
+        ('input.nc', 'netCDF4'),
+        ('input.nc4', 'netCDF4'),
+    ],
+)
+def test_guess_file_type_known_extension(file_path, expected_file_type):
+    """Ensure known paths with known extensions return the expected file type."""
+    assert guess_file_type(file_path) == expected_file_type
+
+
+def test_guess_file_type_not_recognised():
+    """Ensure path with unknown extension raises a ValueError."""
+    with pytest.raises(ValueError, match=r'File extension not recognised: ".xyz"'):
+        guess_file_type('input.xyz')
+
+
+@patch('earthdata_hashdiff.compare.geotiff_matches_reference_hash_file', autospec=True)
+@patch('earthdata_hashdiff.compare.h5_matches_reference_hash_file', autospec=True)
+@patch('earthdata_hashdiff.compare.nc4_matches_reference_hash_file', autospec=True)
+def test_matches_reference_hash_file_netcdf4(
+    mock_nc4_matches_reference_hash_file,
+    mock_h5_matches_reference_hash_file,
+    mock_geotiff_matches_reference_hash_file,
+):
+    """Ensure netCDF4 input is routed to the correct comparison function."""
+    mock_nc4_matches_reference_hash_file.return_value = True
+
+    assert matches_reference_hash_file('input.nc4', 'hashes.json')
+    mock_nc4_matches_reference_hash_file.assert_called_once_with(
+        'input.nc4',
+        'hashes.json',
+    )
+
+    # Ensure other comparison functions weren't called
+    mock_h5_matches_reference_hash_file.assert_not_called()
+    mock_geotiff_matches_reference_hash_file.assert_not_called()
+
+
+@patch('earthdata_hashdiff.compare.geotiff_matches_reference_hash_file', autospec=True)
+@patch('earthdata_hashdiff.compare.h5_matches_reference_hash_file', autospec=True)
+@patch('earthdata_hashdiff.compare.nc4_matches_reference_hash_file', autospec=True)
+def test_matches_reference_hash_file_netcdf4_kwargs(
+    mock_nc4_matches_reference_hash_file,
+    mock_h5_matches_reference_hash_file,
+    mock_geotiff_matches_reference_hash_file,
+):
+    """Ensure netCDF4 input is routed to the comparison function with kwargs."""
+    mock_nc4_matches_reference_hash_file.return_value = True
+
+    variables_to_skip = {'variable_one', 'variable_two'}
+
+    assert matches_reference_hash_file(
+        'input.nc4',
+        'hashes.json',
+        skipped_variables_or_groups=variables_to_skip,
+    )
+    mock_nc4_matches_reference_hash_file.assert_called_once_with(
+        'input.nc4',
+        'hashes.json',
+        skipped_variables_or_groups=variables_to_skip,
+    )
+
+    # Ensure other comparison functions weren't called
+    mock_h5_matches_reference_hash_file.assert_not_called()
+    mock_geotiff_matches_reference_hash_file.assert_not_called()
+
+
+@patch('earthdata_hashdiff.compare.geotiff_matches_reference_hash_file', autospec=True)
+@patch('earthdata_hashdiff.compare.h5_matches_reference_hash_file', autospec=True)
+@patch('earthdata_hashdiff.compare.nc4_matches_reference_hash_file', autospec=True)
+def test_matches_reference_hash_file_hdf5(
+    mock_nc4_matches_reference_hash_file,
+    mock_h5_matches_reference_hash_file,
+    mock_geotiff_matches_reference_hash_file,
+):
+    """Ensure an HDF-5 input is routed to the correct comparison function."""
+    mock_h5_matches_reference_hash_file.return_value = True
+
+    metadata_to_skip = {'varying_parameter'}
+
+    assert matches_reference_hash_file(
+        'input.h5',
+        'hashes.json',
+        skipped_metadata_attributes=metadata_to_skip,
+    )
+    mock_h5_matches_reference_hash_file.assert_called_once_with(
+        'input.h5',
+        'hashes.json',
+        skipped_metadata_attributes=metadata_to_skip,
+    )
+
+    # Ensure other comparison functions weren't called
+    mock_nc4_matches_reference_hash_file.assert_not_called()
+    mock_geotiff_matches_reference_hash_file.assert_not_called()
+
+
+@patch('earthdata_hashdiff.compare.geotiff_matches_reference_hash_file', autospec=True)
+@patch('earthdata_hashdiff.compare.h5_matches_reference_hash_file', autospec=True)
+@patch('earthdata_hashdiff.compare.nc4_matches_reference_hash_file', autospec=True)
+def test_matches_reference_hash_file_geotiff(
+    mock_nc4_matches_reference_hash_file,
+    mock_h5_matches_reference_hash_file,
+    mock_geotiff_matches_reference_hash_file,
+):
+    """Ensure a GeoTIFF input is routed to the correct comparison function."""
+    mock_geotiff_matches_reference_hash_file.return_value = True
+
+    assert matches_reference_hash_file('input.tiff', 'hashes.json')
+
+    mock_geotiff_matches_reference_hash_file.assert_called_once_with(
+        'input.tiff',
+        'hashes.json',
+    )
+
+    # Ensure other comparison functions weren't called
+    mock_nc4_matches_reference_hash_file.assert_not_called()
+    mock_h5_matches_reference_hash_file.assert_not_called()
+
+
+def test_matches_reference_hash_file_unknown_kwargs():
+    """Ensure input with an unknown kwarg raises a TypeError."""
+    with pytest.raises(
+        TypeError, match=r'got an unexpected keyword argument \'unknown_kwarg\''
+    ):
+        matches_reference_hash_file(
+            'input.nc4',
+            'hashes.json',
+            unknown_kwarg='whatami',
+        )
+
+
+def test_matches_reference_hash_file_wrong_kwargs():
+    """Ensure netCDF4 input with a GeoTIFF kwarg raises a TypeError.
+
+    This test ensures that, even though the function signature is overloaded,
+    mixing kwargs from one comparison when trying to execute another will fail.
+
+    """
+    with pytest.raises(
+        TypeError, match=r'got an unexpected keyword argument \'skipped_metadata_tags\''
+    ):
+        matches_reference_hash_file(
+            'input.nc4',
+            'hashes.json',
+            skipped_metadata_tags={'skipped'},
+        )
+
+
+@patch('earthdata_hashdiff.compare.geotiff_matches_reference_hash_file', autospec=True)
+@patch('earthdata_hashdiff.compare.h5_matches_reference_hash_file', autospec=True)
+@patch('earthdata_hashdiff.compare.nc4_matches_reference_hash_file', autospec=True)
+def test_matches_reference_hash_file_unknown_file_extension(
+    mock_nc4_matches_reference_hash_file,
+    mock_h5_matches_reference_hash_file,
+    mock_geotiff_matches_reference_hash_file,
+):
+    """Ensure that a file with an unknown extension raises a ValueError."""
+    with pytest.raises(ValueError, match=r'File extension not recognised: ".xyz"'):
+        matches_reference_hash_file('input.xyz', 'hashes.json')
+
+    # Ensure other comparison functions weren't called
+    mock_nc4_matches_reference_hash_file.assert_not_called()
+    mock_h5_matches_reference_hash_file.assert_not_called()
+    mock_geotiff_matches_reference_hash_file.assert_not_called()

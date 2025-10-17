@@ -4,6 +4,7 @@ from earthdata_hashdiff.__about__ import version
 from earthdata_hashdiff.compare import (
     geotiff_matches_reference_hash_file,
     h5_matches_reference_hash_file,
+    matches_reference_hash_file,
     nc4_matches_reference_hash_file,
 )
 from earthdata_hashdiff.generate import (
@@ -26,5 +27,6 @@ __all__ = [
     'get_hashes_from_nc4_file',
     'geotiff_matches_reference_hash_file',
     'h5_matches_reference_hash_file',
+    'matches_reference_hash_file',
     'nc4_matches_reference_hash_file',
 ]

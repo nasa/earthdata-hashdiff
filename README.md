@@ -135,6 +135,38 @@ assert geotiff_matches_reference_hash_file(
 )
 ```
 
+### A single entry point for comparison
+
+For convenience, you can use the `matches_reference_hash_file` for all of the
+file types previously discussed. Each call will accept the paths to the binary
+file and JSON hash file, along with appropriate optional kwargs relevant to
+the file type.
+
+```python
+from earthdata_hashdiff import matches_reference_hash_file
+
+assert matches_reference_hash_file(
+    'path/to/netcdf/file.nc4',
+    'path/to/json/with/hashes.json',
+)
+
+assert matches_reference_hash_file(
+    'path/to/netcdf/file.nc4',
+    'path/to/json/with/hashes.json',
+    skipped_metadata_attributes={'attribute_name_one', 'attribute_name_two'},
+)
+
+assert geotiff_matches_reference_hash_file(
+    'path/to/geotiff/file.tif',
+    'path/to/json/with/hash.json',
+)
+
+assert geotiff_matches_reference_hash_file(
+    'path/to/geotiff/file.tif',
+    'path/to/json/with/hash.json',
+    skipped_metadata_tags={'tag_name_one'},
+)
+```
 ## Installing
 
 ### Using pip

@@ -6,6 +6,9 @@ This module focuses on comparing output specifically with xarray.
 """
 
 import json
+from collections.abc import Callable
+from os.path import splitext
+from typing import Literal, TypedDict, overload
 
 from earthdata_hashdiff.generate import (
     GEOTIFF_HASH_KEY,
@@ -13,6 +16,89 @@ from earthdata_hashdiff.generate import (
     get_hash_from_geotiff_file,
     get_hashes_from_xarray_input,
 )
+
+HashedFileTypes = Literal['GeoTIFF', 'HDF-5', 'netCDF4']
+
+
+class XarrayParams(TypedDict):
+    """Typing for unique inputs to matches_reference_hash_file_using_xarray."""
+
+    skipped_variables_or_groups: set[str]
+    skipped_metadata_attributes: set[str]
+    xarray_kwargs: dict
+
+
+class GeoTIFFParams(TypedDict):
+    """Typing for unique inputs to geotiff_matches_reference_hash_file."""
+
+    skipped_metadata_tags: set[str]
+
+
+@overload
+def matches_reference_hash_file(
+    binary_file_path: str,
+    reference_file_path: str,
+    **kwargs: XarrayParams,
+) -> bool: ...
+
+
+@overload
+def matches_reference_hash_file(
+    binary_file_path: str,
+    reference_file_path: str,
+    **kwargs: GeoTIFFParams,
+) -> bool: ...
+
+
+def matches_reference_hash_file(
+    binary_file_path: str,
+    reference_file_path: str,
+    **kwargs: XarrayParams | GeoTIFFParams,
+) -> bool:
+    """Generate hashes for request output and compare to reference file.
+
+    Possible kwargs:
+
+    * skipped_variables_or_groups - For netCDF4 or HDF-5 files.
+    * skipped_metadata_attributes - For netCDF4 or HDF-5 files.
+    * xarray_kwargs - For netCDF4 or HDF-5 files.
+    * skipped_metadata_tags - For GeoTIFF files.
+
+    """
+    file_type_comparisons: dict[HashedFileTypes, Callable[..., bool]] = {
+        'GeoTIFF': geotiff_matches_reference_hash_file,
+        'HDF-5': h5_matches_reference_hash_file,
+        'netCDF4': nc4_matches_reference_hash_file,
+    }
+
+    file_type = guess_file_type(binary_file_path)
+
+    comparison_function = file_type_comparisons.get(file_type)
+
+    if comparison_function is None:
+        raise ValueError('file_type not recognised: {file_type}')
+
+    return comparison_function(binary_file_path, reference_file_path, **kwargs)
+
+
+def guess_file_type(file_path: str) -> HashedFileTypes:
+    """Return a file type guessed based on the extension for the file.
+
+    If the extension is an entirely unrecognised one, a `ValueError` is raised.
+
+    """
+    file_extension = splitext(file_path)[-1].lower()
+
+    if file_extension in ['.tif', '.tiff']:
+        file_type: HashedFileTypes = 'GeoTIFF'
+    elif file_extension in ['.h5', '.hdf', '.hdf5']:
+        file_type = 'HDF-5'
+    elif file_extension in ['.nc', '.nc4']:
+        file_type = 'netCDF4'
+    else:
+        raise ValueError(f'File extension not recognised: "{file_extension}"')
+
+    return file_type
 
 
 def matches_reference_hash_file_using_xarray(

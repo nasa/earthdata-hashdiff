@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [vX.Y.Z] - Unreleased
+## [v1.2.0] - 2025-10-10
+
+### Added
+
+- `matches_reference_hash_file` has been added to the top-level API. This function
+  can receive an optional argument specifying the file type, or will try to
+  infer the file type from the path of the file under comparison.
 
 ### Changed
 
