@@ -10,8 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `matches_reference_hash_file` has been added to the top-level API. This function
-  can receive an optional argument specifying the file type, or will try to
-  infer the file type from the path of the file under comparison.
+  will try to infer the file type from the path of the file under comparison and
+  then use the relevant comparison functionality for HDF-5, netCDF4 or GeoTIFF
+  files.
 
 ### Changed
 
