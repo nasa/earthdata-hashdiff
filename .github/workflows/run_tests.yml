@@ -30,7 +30,7 @@ jobs:
 
       - name: Run tests
         run:
-          pytest --junitxml=tests/reports/earthdata-hashdiff_junit.xml --cov earthdata_hashdiff --cov-report html:tests/coverage --cov-report term
+          pytest --junitxml=tests/reports/earthdata-hashdiff_junit.xml --cov earthdata_hashdiff --cov-report html:tests/coverage --cov-report term --cov-fail-under=95
 
       - name: Archive test results
         uses: actions/upload-artifact@v4

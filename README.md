@@ -234,7 +234,8 @@ extra outputs can be produced with the following command:
 
 ```
 pytest tests --junitxml=tests/reports/earthdata-hashdiff_junit.xml \
-    --cov earthdata_hashdiff --cov-report html:tests/coverage --cov-report term
+    --cov earthdata_hashdiff --cov-report html:tests/coverage --cov-report term \
+    --cov-fail-under=95
 ```
 
 This will produce:
@@ -245,6 +246,9 @@ This will produce:
 * An HTML format coverage report in the `tests/coverage` directory. The entry
   point for this output is `tests/coverage/index.html`.
 * JUnit style output in `tests/reports/earthdata-hashdiff_junit.xml`.
+* Note: `pytest` will fail the test suite if code coverage from the unit tests
+  is less than the specified threshold of 95%. This threshold is also used in
+  the GitHub workflow CI/CD.
 
 ## `pre-commit` hooks
 
