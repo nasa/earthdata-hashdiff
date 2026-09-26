@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Close all Xarray group datasets after hashing, including when metadata
+  serialization or lazy data access raises an exception.
+
 ## [v1.2.0] - 2025-10-10
 
 ### Added
