@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Changed
 
-- Loosens dependecy pins to allow library users to choose the library versions that best suit their needs.
-- Internal: Upgrades GitHub Action verisons to latest. Updates pre-commit ci versions.
+- Loosens dependency pins to allow library users to choose the library versions that best suit their needs.
+- Internal: Upgrades GitHub Action versions to latest. Updates pre-commit ci versions.
 
 ## [v1.2.0] - 2025-10-10
 
