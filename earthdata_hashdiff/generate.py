@@ -37,6 +37,7 @@ XARRAY_DECODE_DEFAULTS = {
     'decode_coords': False,
     'decode_timedelta': False,
     'decode_times': False,
+    'cache': False,
 }
 
 # Define a standard key to use for GeoTIFF file hash in JSON output
