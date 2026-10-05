@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [v1.2.1] - 2026-09-29
 
 ## Added
 
@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Changed
 
+- Overrides xarray's default value of `cache` in `XARRAY_DECODE_DEFAULTS` setting it to `'cache' = False` to lower memory usage when computing hashes. This is a simple memory improvement, hashes generated are unchanged from previous versions.
 - Loosens dependency pins to allow library users to choose the library versions that best suit their needs.
 - Internal: Upgrades GitHub Action versions to latest. Updates pre-commit ci versions.
 
@@ -71,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pre-commit CI/CD checks, including mypy and ruff.
 - CI/CD workflows as GitHub actions.
 
+[v1.2.1]: https://github.com/nasa/earthdata-hashdiff/releases/tag/1.2.1
 [v1.2.0]: https://github.com/nasa/earthdata-hashdiff/releases/tag/1.2.0
 [v1.1.0]: https://github.com/nasa/earthdata-hashdiff/releases/tag/1.1.0
 [v1.0.2]: https://github.com/nasa/earthdata-hashdiff/releases/tag/1.0.2
