@@ -22,6 +22,7 @@ Main functions for external usage:
 
 import json
 from collections.abc import Hashable
+from contextlib import ExitStack
 from hashlib import sha256
 from pathlib import Path
 
@@ -123,16 +124,21 @@ def get_hashes_from_xarray_input(
 
     """
     parsed_hashes: dict[str, str] = {}
-    input_groups = xr.open_groups(input_file_path, **xarray_kwargs)
+    with ExitStack() as stack:
+        input_groups = xr.open_groups(input_file_path, **xarray_kwargs)
+        # Register every group before hashing so later groups also close if an
+        # earlier group's metadata or lazy data cannot be read.
+        for dataset in input_groups.values():
+            stack.callback(dataset.close)
 
-    for dataset_path, dataset in input_groups.items():
-        parsed_hashes.update(
-            **get_hash_of_xarray_dataset(
-                dataset_path,
-                dataset,
-                skipped_metadata_attributes,
+        for dataset_path, dataset in input_groups.items():
+            parsed_hashes.update(
+                **get_hash_of_xarray_dataset(
+                    dataset_path,
+                    dataset,
+                    skipped_metadata_attributes,
+                )
             )
-        )
 
     return parsed_hashes
 
