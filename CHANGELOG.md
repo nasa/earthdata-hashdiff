@@ -5,13 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.2.2] - Unreleased
+
+### Changed
+
+- Updated package CI/CD to use use central release notes action from the
+  `nasa/harmony-cicd-tools` repository. This does not impact the functionality
+  of the `earthdata-hashdiff` package.
+
 ## [v1.2.1] - 2026-09-29
 
-## Added
+### Added
 
 - Adds support for python 3.13.
 
-## Changed
+### Changed
 
 - Overrides xarray's default value of `cache` in `XARRAY_DECODE_DEFAULTS` setting it to `'cache' = False` to lower memory usage when computing hashes. This is a simple memory improvement, hashes generated are unchanged from previous versions.
 - Loosens dependency pins to allow library users to choose the library versions that best suit their needs.
