@@ -95,6 +95,21 @@ This function has one additional optional argument:
   name. As with `skipped_metadata_attributes`, entries can be exact names or
   shell-style wildcard patterns.
 
+The names matched by `skipped_metadata_tags` are the keys of the dictionary
+returned by `tifffile.TiffFile.geotiff_metadata`, not TIFF tag names.
+`tifffile` unpacks the `GeoKeyDirectoryTag` so that each GeoKey has its own
+entry (e.g., `GTModelTypeGeoKey` or `ProjectedCSTypeGeoKey`), and includes
+other GeoTIFF tags without the `Tag` suffix (e.g., `ModelPixelScale`). This
+means individual GeoKeys can be skipped, while skipping `GeoKeyDirectoryTag`
+itself has no effect. To list the names available for a file:
+
+```python
+from tifffile import TiffFile
+
+with TiffFile('path/to/geotiff/file.tif') as geotiff_image:
+    print(list(geotiff_image.geotiff_metadata or {}))
+```
+
 ### Comparisons against reference files
 
 When a JSON file exists with hashed values, it can be used for comparisons. The
