@@ -302,9 +302,7 @@ def is_skipped_attribute(
     """Determine if metadata attribute matches any user-specified skip pattern.
 
     Each entry in `skipped_metadata_attributes` is treated as a shell-style
-    wildcard pattern, as supported by `fnmatch`. An entry without wildcard
-    characters (`*`, `?` or `[...]`) will only match an attribute with exactly
-    that name. Matching is case-sensitive on all platforms.
+    wildcard pattern. Matching is case-sensitive on all platforms.
 
     """
     return any(
