@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v1.3.0] - 2026-11-24
+
+### Added
+
+- `skipped_metadata_attributes` and `skipped_metadata_tags` now accept case-sensitive, shell-style wildcard patterns (`*`, `?` and `[...]`, via [`fnmatch`](https://docs.python.org/3/library/fnmatch.html)). For example, `{'build_dmrpp_metadata.*'}` will omit all attributes added by the `build_dmrpp` process.
+
 ## [v1.2.1] - 2026-09-29
 
 ## Added
@@ -72,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pre-commit CI/CD checks, including mypy and ruff.
 - CI/CD workflows as GitHub actions.
 
+[v1.3.0]: https://github.com/nasa/earthdata-hashdiff/releases/tag/1.3.0
 [v1.2.1]: https://github.com/nasa/earthdata-hashdiff/releases/tag/1.2.1
 [v1.2.0]: https://github.com/nasa/earthdata-hashdiff/releases/tag/1.2.0
 [v1.1.0]: https://github.com/nasa/earthdata-hashdiff/releases/tag/1.1.0

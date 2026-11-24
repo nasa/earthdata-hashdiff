@@ -22,6 +22,7 @@ from earthdata_hashdiff.generate import (
     get_numpy_array_bytes,
     get_variable_dimensions_bytes,
     get_xarray_object_hash,
+    is_skipped_attribute,
     is_varying_attribute,
     serialise_metadata_value,
 )
@@ -271,6 +272,68 @@ def test_get_metadata_bytes_skipped(latitude_metadata, latitude_metadata_bytes):
     )
 
 
+def test_get_metadata_bytes_skipped_wildcard(
+    latitude_metadata, latitude_metadata_bytes
+):
+    """Ensure a wildcard pattern skips all matching attributes."""
+    latitude_metadata['build_dmrpp_metadata.created'] = '2026-11-05T21:31:12Z'
+    latitude_metadata['build_dmrpp_metadata.bes'] = '3.21.1-1090'
+    latitude_metadata['build_dmrpp_metadata.invocation'] = 'build_dmrpp -f input.h5'
+    assert (
+        get_metadata_bytes(latitude_metadata, {'build_dmrpp_metadata.*'})
+        == latitude_metadata_bytes
+    )
+
+
+def test_get_metadata_bytes_skipped_wildcard_partial_match(
+    latitude_metadata, latitude_metadata_bytes
+):
+    """Ensure attributes not matching a wildcard pattern are retained."""
+    latitude_metadata['build_dmrpp_metadata.bes'] = '3.21.1-1090'
+    latitude_metadata['other_metadata.bes'] = '3.21.1-1090'
+    assert get_metadata_bytes(
+        latitude_metadata, {'build_dmrpp_metadata.*'}
+    ) == get_metadata_bytes(latitude_metadata, {'build_dmrpp_metadata.bes'})
+    assert (
+        get_metadata_bytes(latitude_metadata, {'build_dmrpp_metadata.*'})
+        != latitude_metadata_bytes
+    )
+
+
+@pytest.mark.parametrize(
+    'attribute_name,skipped_metadata_attributes',
+    [
+        ('to_skip', {'to_skip'}),
+        ('to_skip', {'other', 'to_skip'}),
+        ('build_dmrpp_metadata.bes', {'build_dmrpp_metadata.*'}),
+        ('build_dmrpp_metadata.created', {'*.created'}),
+        ('attribute_1', {'attribute_?'}),
+        ('attribute_1', {'attribute_[0-9]'}),
+    ],
+)
+def test_is_skipped_attribute_skipped(attribute_name, skipped_metadata_attributes):
+    """Ensure attributes matching exact names or wildcard patterns are skipped."""
+    assert is_skipped_attribute(attribute_name, skipped_metadata_attributes)
+
+
+@pytest.mark.parametrize(
+    'attribute_name,skipped_metadata_attributes',
+    [
+        ('to_keep', set()),
+        ('to_keep', {'to_skip'}),
+        ('to_skip_suffix', {'to_skip'}),
+        ('prefix_to_skip', {'to_skip'}),
+        ('TO_SKIP', {'to_skip'}),
+        ('build_dmrpp_metadata', {'build_dmrpp_metadata.*'}),
+        ('BUILD_DMRPP_METADATA.bes', {'build_dmrpp_metadata.*'}),
+        ('attribute_10', {'attribute_?'}),
+    ],
+)
+def test_is_skipped_attribute_not_skipped(attribute_name, skipped_metadata_attributes):
+    """Ensure exact names match exactly, and matching is case-sensitive."""
+    assert not is_skipped_attribute(attribute_name, skipped_metadata_attributes)
+
+
 @pytest.mark.parametrize(
     'attribute_name',
     [
@@ -330,3 +393,16 @@ def test_create_geotiff_hash_file(sample_geotiff_file, tmpdir, sample_geotiff_ha
 def test_get_hash_from_geotiff_file(sample_geotiff_file, sample_geotiff_hash):
     """Get hash output for a GeoTIFF input file."""
     assert get_hash_from_geotiff_file(sample_geotiff_file, {}) == sample_geotiff_hash
+
+
+def test_get_hash_from_geotiff_file_skipped_wildcard(
+    sample_geotiff_file, sample_geotiff_hash
+):
+    """Ensure wildcard patterns are applied to GeoTIFF metadata tag names."""
+    assert (
+        get_hash_from_geotiff_file(sample_geotiff_file, {'NoMatch*'})
+        == sample_geotiff_hash
+    )
+    assert get_hash_from_geotiff_file(sample_geotiff_file, {'GT*'}) != (
+        sample_geotiff_hash
+    )

@@ -122,7 +122,8 @@ def matches_reference_hash_file_using_xarray(
             the derivation of the SHA256 hash for all group and variable metadata.
             These will be values that are known to vary and are in addition to
             `history` and `history_json`. The main use-case is metadata attributes
-            with timestamps dependent on request execution time.
+            with timestamps dependent on request execution time. Entries may be
+            shell-style wildcard patterns, e.g., `build_dmrpp_metadata.*`.
         xarray_kwargs: dict containing arguments used by `xarray` to open the
             request output file as a `DataTree` object. Default is to switch off all
             decoding options.
@@ -169,6 +170,7 @@ def geotiff_matches_reference_hash_file(
             derivation of the SHA256 hash for the input GeoTIFF file. These
             will be values that are known to vary. The main use-case is
             metadata tags with timestamps dependent on request execution time.
+            Entries may be shell-style wildcard patterns.
 
     """
     actual_hash = get_hash_from_geotiff_file(

@@ -30,8 +30,9 @@ create_nc4_hash_file('path/to/netcdf/file.nc4', 'path/to/output/hash.json')
 The functions to create the hash files have two additional optional arguments:
 
 * `skipped_metadata_attributes` - this is a set of strings. When specified, the
-  hashing functionality will not include metadata attributes with that exact
-  name in the calculation of the hash for all variables or groups.
+  hashing functionality will not include metadata attributes with a matching
+  name in the calculation of the hash for all variables or groups. Entries can
+  be exact names or shell-style wildcard patterns (see below).
 * `xarray_kwargs` - this dictionary allows users to specify keyword arguments
   to `xarray` when the input file is opened as a dictionary of group objects.
   The default value for this kwarg is to turn off all `xarray` decoding for
@@ -57,6 +58,26 @@ In the example above, neither of the values for metadata attributes with names
 `attribute_name_one` or `attribute_name_two` will be included in the calculation
 of a hash value for any variable or group in the input file.
 
+Entries in `skipped_metadata_attributes` are treated as shell-style wildcard
+patterns, as supported by Python's `fnmatch` module. This is useful when a
+family of attributes shares a common prefix, but the exact set of names or
+their values could vary between files. Most likey the dmrpp_metadata. The
+following will omit all attributes added , such as `build_dmrpp_metadata.bes`,
+`build_dmrpp_metadata.libdap`, `build_dmrpp_metadata.invocation`:
+
+```python
+create_nc4_hash_file(
+    'path/to/netcdf/file.nc4',
+    'path/to/output/hash.json',
+    skipped_metadata_attributes={'build_dmrpp_metadata.*'},
+)
+```
+
+Supported wildcards are `*` (any characters), `?` (any single character) and
+`[...]` (any character in the set). Matching is case-sensitive. An entry with no
+wildcard characters will only match an attribute with exactly that name. To
+match a literal `*`, `?` or `[`, wrap it in square brackets (e.g., `[*]`).
+
 ### Hashing GeoTIFF files
 
 A similar JSON file can be created for a GeoTIFF file:
@@ -70,7 +91,24 @@ create_geotiff_hash_file('path/to/geotiff/file.tif', 'path/to/output/hash.json')
 This function has one additional optional argument:
 
 * `skipped_metadata_tags` - this is a set of strings. When specified, the
-  hashing functionality will not include GeoTIFF metadata tags with that name.
+  hashing functionality will not include GeoTIFF metadata tags with a matching
+  name. As with `skipped_metadata_attributes`, entries can be exact names or
+  shell-style wildcard patterns.
+
+The names matched by `skipped_metadata_tags` are the keys of the dictionary
+returned by `tifffile.TiffFile.geotiff_metadata`, not TIFF tag names.
+`tifffile` unpacks the `GeoKeyDirectoryTag` so that each GeoKey has its own
+entry (e.g., `GTModelTypeGeoKey` or `ProjectedCSTypeGeoKey`), and includes
+other GeoTIFF tags without the `Tag` suffix (e.g., `ModelPixelScale`). This
+means individual GeoKeys can be skipped, while skipping `GeoKeyDirectoryTag`
+itself has no effect. To list the names available for a file:
+
+```python
+from tifffile import TiffFile
+
+with TiffFile('path/to/geotiff/file.tif') as geotiff_image:
+    print(list(geotiff_image.geotiff_metadata or {}))
+```
 
 ### Comparisons against reference files
 
