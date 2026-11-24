@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `skipped_metadata_attributes` and `skipped_metadata_tags` now accept shell-style wildcard patterns (`*`, `?` and `[...]`, via [`fnmatch`](https://docs.python.org/3/library/fnmatch.html)). For example, `{'build_dmrpp_metadata.*'}` will omit all attributes added by `build_dmrpp`, regardless of which specific attributes are present in a file. Matching is case-sensitive.
+- `skipped_metadata_attributes` and `skipped_metadata_tags` now accept case-sensitive, shell-style wildcard patterns (`*`, `?` and `[...]`, via [`fnmatch`](https://docs.python.org/3/library/fnmatch.html)). For example, `{'build_dmrpp_metadata.*'}` will omit all attributes added by the `build_dmrpp` process.
 
 ### Changed
 
