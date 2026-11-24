@@ -83,8 +83,8 @@ def test_matches_reference_hash_file_skip_metadata_wildcard(
 ):
     """Ensure a wildcard pattern ignores all matching attributes in comparison.
 
-    The attributes added mimic those added by `build_dmrpp`, where the exact
-    set of attribute names varies between versions of that tool.
+    The attributes added mimic those added by the `build_dmrpp` process, where
+    the exact set and values of attribute names can vary between versions.
 
     """
     amended_datatree_path = path_join(tmpdir, 'amended_datatree.nc4')
