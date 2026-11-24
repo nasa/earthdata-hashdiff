@@ -78,6 +78,44 @@ def test_matches_reference_hash_file_skip_metadata(
     )
 
 
+def test_matches_reference_hash_file_skip_metadata_wildcard(
+    sample_datatree, tmpdir, sample_hash_file
+):
+    """Ensure a wildcard pattern ignores all matching attributes in comparison.
+
+    The attributes added mimic those added by `build_dmrpp`, where the exact
+    set of attribute names varies between versions of that tool.
+
+    """
+    amended_datatree_path = path_join(tmpdir, 'amended_datatree.nc4')
+    sample_datatree.attrs['build_dmrpp_metadata.created'] = '2026-11-05T21:31:12Z'
+    sample_datatree.attrs['build_dmrpp_metadata.bes'] = '3.21.1-1090'
+    sample_datatree['/group_one'].attrs['build_dmrpp_metadata.configuration'] = 'a'
+    sample_datatree.to_netcdf(amended_datatree_path)
+
+    assert matches_reference_hash_file_using_xarray(
+        amended_datatree_path,
+        sample_hash_file,
+        skipped_metadata_attributes={'build_dmrpp_metadata.*'},
+    )
+
+
+def test_matches_reference_hash_file_skip_metadata_wildcard_no_match(
+    sample_datatree, tmpdir, sample_hash_file
+):
+    """Ensure attributes not matching a wildcard pattern are still compared."""
+    amended_datatree_path = path_join(tmpdir, 'amended_datatree.nc4')
+    sample_datatree['/group_one'].attrs['build_dmrpp_metadata.bes'] = '3.21.1-1090'
+    sample_datatree['/group_one'].attrs['DONT_IGNORE_ME'] = 'Different metadata!'
+    sample_datatree.to_netcdf(amended_datatree_path)
+
+    assert not matches_reference_hash_file_using_xarray(
+        amended_datatree_path,
+        sample_hash_file,
+        skipped_metadata_attributes={'build_dmrpp_metadata.*'},
+    )
+
+
 def test_matches_reference_hash_file_updated_metadata_asserts_false(
     sample_datatree, tmpdir, sample_hash_file
 ):

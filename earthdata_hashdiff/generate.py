@@ -22,6 +22,7 @@ Main functions for external usage:
 
 import json
 from collections.abc import Hashable
+from fnmatch import fnmatchcase
 from hashlib import sha256
 from pathlib import Path
 
@@ -60,6 +61,7 @@ def create_geotiff_hash_file(
             derivation of the SHA256 has for the input GeoTIFF file.
             These will be values that are known to vary. The main use-case is
             metadata tags with timestamps dependent on request execution time.
+            Entries may be shell-style wildcard patterns.
 
     """
     generated_hash = get_hash_from_geotiff_file(input_file_path, skipped_metadata_tags)
@@ -83,7 +85,8 @@ def create_xarray_reference_file(
             the derivation of the SHA256 has for all group and variable metadata.
             These will be values that are known to vary and are in addition to
             `history` and `history_json`. The main use-case is metadata attributes
-            with timestamps dependent on request execution time.
+            with timestamps dependent on request execution time. Entries may be
+            shell-style wildcard patterns, e.g., `build_dmrpp_metadata.*`.
         xarray_kwargs: dict containing arguments used by `xarray` to open the
             input file as a `DataTree` object. Default is to switch off all decoding
             options.
@@ -116,7 +119,8 @@ def get_hashes_from_xarray_input(
             the derivation of the SHA256 has for all group and variable metadata.
             These will be values that are known to vary and are in addition to
             `history` and `history_json`. The main use-case is metadata attributes
-            with timestamps dependent on request execution time.
+            with timestamps dependent on request execution time. Entries may be
+            shell-style wildcard patterns, e.g., `build_dmrpp_metadata.*`.
         xarray_kwargs: dict containing arguments used by `xarray` to open the
             input file as a `DataTree` object. Default is to switch off all
             decoding options.
@@ -273,6 +277,9 @@ def get_metadata_bytes(
 
     * The attributes are filtered for values that will contain
       datetimes reflecting processing times.
+    * Attributes with names matching any of the skipped metadata attributes
+      are omitted. These can be exact names or shell-style wildcard patterns
+      (e.g., `build_dmrpp_metadata.*`). Matching is case-sensitive.
     * The resulting dictionary will be sorted then converted to a string.
     * That string will be encoded as UTF-8 bytes.
 
@@ -280,10 +287,29 @@ def get_metadata_bytes(
     cleaned_metadata = {
         key: serialise_metadata_value(value)
         for key, value in variable_metadata.items()
-        if (not is_varying_attribute(key) and key not in skipped_metadata_attributes)
+        if (
+            not is_varying_attribute(key)
+            and not is_skipped_attribute(key, skipped_metadata_attributes)
+        )
     }
 
     return json.dumps(dict(sorted(cleaned_metadata.items()))).encode('utf-8')
+
+
+def is_skipped_attribute(
+    attribute_name: str, skipped_metadata_attributes: set[str]
+) -> bool:
+    """Determine if metadata attribute matches any user-specified skip pattern.
+
+    Each entry in `skipped_metadata_attributes` is treated as a shell-style
+    wildcard pattern, as supported by `fnmatch`. An entry without wildcard
+    characters (`*`, `?` or `[...]`) will only match an attribute with exactly
+    that name. Matching is case-sensitive on all platforms.
+
+    """
+    return any(
+        fnmatchcase(attribute_name, pattern) for pattern in skipped_metadata_attributes
+    )
 
 
 def is_varying_attribute(attribute_name: str) -> bool:
