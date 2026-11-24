@@ -40,11 +40,9 @@ jobs:
         run: echo "semantic_version=$(hatch version)" >> $GITHUB_ENV
 
       - name: Extract release version notes
-        run: |
-          version_release_notes=$(./bin/extract-release-notes.sh)
-          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-          echo "${version_release_notes}" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+        uses: nasa/harmony-cicd-tools/actions/release-notes-extractor@1.0.0
+        with:
+          changelog: CHANGELOG.md
 
       - name: Build earthdata-hashdiff distributions
         run: hatch build

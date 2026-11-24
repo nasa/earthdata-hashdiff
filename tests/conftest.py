@@ -4,7 +4,11 @@ from os.path import join as path_join
 import numpy as np
 import xarray as xr
 from pytest import fixture
-from tifffile import imwrite
+from tifffile import DATATYPE, TIFF, imwrite
+from tifffile.geodb import Angular, GeoKeys, Linear, ModelType, RasterPixel
+
+# Not included in the tifffile.geodb.PCS enumeration.
+EASE_GRID_2_GLOBAL_EPSG_CODE = 6933
 
 
 def is_json_serialisable(input_object) -> bool:
@@ -200,80 +204,115 @@ def sample_nc4_file(sample_datatree, tmpdir):
 
 @fixture(scope='function')
 def sample_geotiff_tags():
-    """Tags for the sample GeoTIFF file."""
+    """Tags for the sample GeoTIFF file.
+
+    Values copied from a PREFIRE GeoTIFF. Each tag is a tuple of
+    (tag ID, data type, count, value, write once), as expected by the
+    `extratags` argument of `tifffile.imwrite`. Counts for ASCII values
+    include the trailing NUL character.
+
+    """
+    # GeoAsciiParamsTag holds both citations, each terminated by "|". The
+    # citation GeoKeys refer to them by length and offset within this string.
+    projected_citation = 'WGS 84 / NSIDC EASE-Grid 2.0 Global|'
+    geographic_citation = 'WGS 84|'
+    geo_ascii_params = projected_citation + geographic_citation
+
+    # GeoKey entries: (key ID, location, count, value or offset). A location
+    # of 0 means the value is stored inline; otherwise it is the ID of the tag
+    # holding the value.
+    geo_keys = [
+        (GeoKeys.GTModelTypeGeoKey, 0, 1, ModelType.Projected),
+        (GeoKeys.GTRasterTypeGeoKey, 0, 1, RasterPixel.IsArea),
+        (
+            GeoKeys.GTCitationGeoKey,
+            TIFF.TAGS['GeoAsciiParamsTag'],
+            len(projected_citation),
+            0,
+        ),
+        (
+            GeoKeys.GeogCitationGeoKey,
+            TIFF.TAGS['GeoAsciiParamsTag'],
+            len(geographic_citation),
+            len(projected_citation),
+        ),
+        (GeoKeys.GeogAngularUnitsGeoKey, 0, 1, Angular.Degree),
+        (GeoKeys.ProjectedCSTypeGeoKey, 0, 1, EASE_GRID_2_GLOBAL_EPSG_CODE),
+        (GeoKeys.ProjLinearUnitsGeoKey, 0, 1, Linear.Meter),
+    ]
+
+    # Header: directory version 1, revision 1.0, then the number of keys.
+    geo_key_directory = [1, 1, 0, len(geo_keys)]
+    for geo_key in geo_keys:
+        geo_key_directory.extend(int(value) for value in geo_key)
+
+    gdal_metadata = (
+        '<GDALMetadata>\n'
+        '  <Item name="long_name">The fraction of the grid cell that '
+        '  contains the most common land cover in that area based on '
+        '  the IGBP landcover map.</Item>\n'
+        '  <Item name="OVR_RESAMPLING_ALG">NEAREST</Item>'
+        '  <Item name="valid_max">1.0</Item>'
+        '  <Item name="valid_min">0.0</Item>'
+        '  <Item name="DESCRIPTION" sample="0" role="description">'
+        '  The fraction of the grid cell that contains the most '
+        '  common land cover in that area based on the IGBP '
+        '  landcover map.</Item>'
+        '  <Item name="DESCRIPTION" sample="1" role="description">'
+        '  The fraction of the grid cell that contains the most '
+        '  common land cover in that area based on the IGBP '
+        '  landcover map.</Item>'
+        '  <Item name="DESCRIPTION" sample="2" role="description">'
+        '  The fraction of the grid cell that contains the most '
+        '  common land cover in that area based on the IGBP '
+        '  landcover map.</Item>'
+        '</GDALMetadata>'
+    )
+    gdal_nodata = '-9999'
+
     return [
         (
-            34735,
-            3,
-            32,
-            (
-                1,
-                1,
-                0,
-                7,
-                1024,
-                0,
-                1,
-                1,
-                1025,
-                0,
-                1,
-                1,
-                1026,
-                34737,
-                36,
-                0,
-                2049,
-                34737,
-                7,
-                36,
-                2054,
-                0,
-                1,
-                9102,
-                3072,
-                0,
-                1,
-                6933,
-                3076,
-                0,
-                1,
-                9001,
-            ),
+            TIFF.TAGS['GeoKeyDirectoryTag'],
+            DATATYPE.SHORT,
+            len(geo_key_directory),
+            tuple(geo_key_directory),
             True,
         ),
-        (33550, 12, 3, (36032.22084058401, 36032.220840584, 0.0), True),
-        (33922, 12, 6, (0.0, 0.0, 0.0, -17367530.4451615, 7314540.8306386, 0.0), True),
-        (34737, 2, 44, 'WGS 84 / NSIDC EASE-Grid 2.0 Global|WGS 84|', True),
         (
-            42112,
-            2,
-            845,
-            (
-                '<GDALMetadata>\n'
-                '  <Item name="long_name">The fraction of the grid cell that '
-                '  contains the most common land cover in that area based on '
-                '  the IGBP landcover map.</Item>\n'
-                '  <Item name="OVR_RESAMPLING_ALG">NEAREST</Item>'
-                '  <Item name="valid_max">1.0</Item>'
-                '  <Item name="valid_min">0.0</Item>'
-                '  <Item name="DESCRIPTION" sample="0" role="description">'
-                '  The fraction of the grid cell that contains the most '
-                '  common land cover in that area based on the IGBP '
-                '  landcover map.</Item>'
-                '  <Item name="DESCRIPTION" sample="1" role="description">'
-                '  The fraction of the grid cell that contains the most '
-                '  common land cover in that area based on the IGBP '
-                '  landcover map.</Item>'
-                '  <Item name="DESCRIPTION" sample="2" role="description">'
-                '  The fraction of the grid cell that contains the most '
-                '  common land cover in that area based on the IGBP '
-                '  landcover map.</Item>'
-                '</GDALMetadata>'
-            ),
+            TIFF.TAGS['ModelPixelScaleTag'],
+            DATATYPE.DOUBLE,
+            3,
+            (36032.22084058401, 36032.220840584, 0.0),
             True,
         ),
-        (42113, 2, 6, '-9999', True),
+        (
+            TIFF.TAGS['ModelTiepointTag'],
+            DATATYPE.DOUBLE,
+            6,
+            (0.0, 0.0, 0.0, -17367530.4451615, 7314540.8306386, 0.0),
+            True,
+        ),
+        (
+            TIFF.TAGS['GeoAsciiParamsTag'],
+            DATATYPE.ASCII,
+            len(geo_ascii_params) + 1,
+            geo_ascii_params,
+            True,
+        ),
+        (
+            TIFF.TAGS['GDAL_METADATA'],
+            DATATYPE.ASCII,
+            len(gdal_metadata) + 1,
+            gdal_metadata,
+            True,
+        ),
+        (
+            TIFF.TAGS['GDAL_NODATA'],
+            DATATYPE.ASCII,
+            len(gdal_nodata) + 1,
+            gdal_nodata,
+            True,
+        ),
     ]
 
 

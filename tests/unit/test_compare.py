@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
-from tifffile import imwrite
+from tifffile import DATATYPE, TIFF, imwrite
 
 from earthdata_hashdiff.compare import (
     geotiff_matches_reference_hash_file,
@@ -140,7 +140,13 @@ def test_geotiff_matches_reference_hash_file_metadata_difference_fails(
 ):
     """Ensure GeoTIFF comparison fails when a metadata attribute is different."""
     amended_geotiff_path = path_join(tmpdir, 'amended_metadata.tif')
-    sample_geotiff_tags[1] = (33550, 12, 3, (18000, 18000, 0.0), True)
+    sample_geotiff_tags[1] = (
+        TIFF.TAGS['ModelPixelScaleTag'],
+        DATATYPE.DOUBLE,
+        3,
+        (18000, 18000, 0.0),
+        True,
+    )
 
     imwrite(
         amended_geotiff_path,
