@@ -11,10 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `skipped_metadata_attributes` and `skipped_metadata_tags` now accept case-sensitive, shell-style wildcard patterns (`*`, `?` and `[...]`, via [`fnmatch`](https://docs.python.org/3/library/fnmatch.html)). For example, `{'build_dmrpp_metadata.*'}` will omit all attributes added by the `build_dmrpp` process.
 
-### Changed
-
-- Because entries are now interpreted as patterns, any existing skipped attribute or tag name that literally contains `*`, `?` or `[` will need those characters escaped by wrapping them in square brackets (e.g., `[*]`).  Entries without these characters behave exactly as before, and hashes generated without skipped metadata are unchanged.
-
 ## [v1.2.1] - 2026-09-29
 
 ## Added
